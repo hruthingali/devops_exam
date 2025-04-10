@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: java-app
-          image: hruthingali/java-microservice
+          image: hruthingali/java-microservice:v1  
           ports:
             - containerPort: 8080
       imagePullSecrets:
-        - name: regcred
+        - name: regcred  
