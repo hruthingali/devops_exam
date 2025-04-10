@@ -16,4 +16,6 @@ spec:
         - name: java-app
           image: hruthingali/java-microservice
           ports:
-            - containerPort: 8080
+            - containerPort: 5000
+      imagePullSecrets:
+        - name: regcred  
