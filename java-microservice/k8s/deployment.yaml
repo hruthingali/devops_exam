@@ -14,6 +14,8 @@ spec:
     spec:
       containers:
         - name: java-app
-          image: hruthingali/java-microservice
+          image: hruthingali/java-microservice:<tag>  # specify correct tag here
           ports:
             - containerPort: 8080
+      imagePullSecrets:
+        - name: regcred
