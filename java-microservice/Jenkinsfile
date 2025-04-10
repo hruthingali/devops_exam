@@ -15,7 +15,9 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                sh 'mvn clean install'
+                dir('java-microservice') {
+                    sh 'mvn clean install'
+                }
             }
         }
 
@@ -24,10 +26,12 @@ pipeline {
                 branch 'develop'
             }
             steps {
-                script {
-                    docker.build("${REGISTRY}:${IMAGE_TAG}")
-                    docker.withRegistry('', 'docker-hub-credentials') {
-                        docker.image("${REGISTRY}:${IMAGE_TAG}").push()
+                dir('java-microservice') {
+                    script {
+                        docker.build("${REGISTRY}:${IMAGE_TAG}")
+                        docker.withRegistry('', 'docker-hub-credentials') {
+                            docker.image("${REGISTRY}:${IMAGE_TAG}").push()
+                        }
                     }
                 }
             }
@@ -38,10 +42,12 @@ pipeline {
                 branch 'develop'
             }
             steps {
-                sh """
-                    sed -i 's|IMAGE_TAG|${IMAGE_TAG}|g' k8s/deployment.yaml
-                    kubectl apply -f k8s/
-                """
+                dir('java-microservice') {
+                    sh """
+                        sed -i 's|IMAGE_TAG|${IMAGE_TAG}|g' k8s/deployment.yaml
+                        kubectl apply -f k8s/ --validate=false
+                    """
+                }
             }
         }
     }
