@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+
+    environment {
+        REGISTRY = 'your-dockerhub-username/java-microservice'
+        IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                sh 'mvn clean install'
+            }
+        }
+
+        stage('Docker Build & Push') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                script {
+                    docker.build("${REGISTRY}:${IMAGE_TAG}")
+                    docker.withRegistry('', 'dockerhub-credentials-id') {
+                        docker.image("${REGISTRY}:${IMAGE_TAG}").push()
+                    }
+                }
+            }
+        }
+
+        stage('Kubernetes Deploy') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                sh """
+                    sed -i 's|IMAGE_TAG|${IMAGE_TAG}|g' k8s/deployment.yaml
+                    kubectl apply -f k8s/
+                """
+            }
+        }
+    }
+}
