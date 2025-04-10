@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: java-app
-          image: your-dockerhub-username/java-microservice:IMAGE_TAG
+          image: hruthingali/java-microservice
           ports:
             - containerPort: 8080
