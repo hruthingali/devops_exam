@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY = 'your-dockerhub-username/java-microservice'
+        REGISTRY = 'hruthingali/java-microservice'
         IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
