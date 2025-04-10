@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'        
+        REGISTRY = 'hruthingali/java-microservice'
+        IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -14,33 +15,39 @@ pipeline {
 
         stage('Build & Test') {
             steps {
+                dir('java-microservice') {
                     sh 'mvn clean install'
-                
+                }
             }
         }
-        stage('Build Docker Image') {
-            steps {
-                sh 'docker build -t hruthingali/java-microservice:v1 .'
+
+        stage('Docker Build & Push') {
+            when {
+                branch 'develop'
             }
-        }
-        stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker push hruthingali/java-microservice:v1
-                    '''
+                dir('java-microservice') {
+                    script {
+                        docker.build("${REGISTRY}:${IMAGE_TAG}")
+                        docker.withRegistry('', 'docker-hub-credentials') {
+                            docker.image("${REGISTRY}:${IMAGE_TAG}").push()
+                        }
+                    }
                 }
             }
         }
 
         stage('Kubernetes Deploy') {
+            when {
+                branch 'develop'
+            }
             steps {
+                dir('java-microservice') {
                     sh """
-                        kubectl apply -f k8s/deployment.yaml
-                        kubectl apply -f k8s/service.yaml
+                        sed -i 's|IMAGE_TAG|${IMAGE_TAG}|g' k8s/deployment.yaml
+                        kubectl apply -f k8s/ --validate=false
                     """
-                
+                }
             }
         }
     }
